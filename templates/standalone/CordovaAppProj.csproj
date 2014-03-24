@@ -139,6 +139,7 @@
     <Compile Include="cordovalib\Commands\File.cs" />
     <Compile Include="cordovalib\Commands\FileTransfer.cs" />
     <Compile Include="cordovalib\Commands\GeoLocation.cs" />
+    <Compile Include="cordovalib\Commands\Globalization.cs" />
     <Compile Include="cordovalib\Commands\ImageExifHelper.cs" />
     <Compile Include="cordovalib\Commands\Media.cs" />
     <Compile Include="cordovalib\Commands\MimeTypeMapper.cs" />

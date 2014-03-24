@@ -1,0 +1,6 @@
+Fixed wp8 support of globalization plugin
+
+-Cordova RTC Defect 37976
+-Worklight RTC Defect 16949
+-Referenced by community.phonegap.com/nitobi/topics/getLocalename_not_working_in_windows_phone
+-Description: Globalization.cs was accidentally removed and not replaced until 2.4.0. This commit restores the file to 2.3.0esr
