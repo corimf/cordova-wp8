@@ -24,7 +24,7 @@ namespace WPCordovaClassLib.CordovaLib
         cons.error = cons.error || function(msg) { exec('ERROR:' + msg ); };
     })(window);";
 
-           Browser.InvokeScript("execScript", new string[] { script });
+            Browser.InvokeScript("eval", new string[] { script });
         }
 
         public bool HandleCommand(string commandStr)

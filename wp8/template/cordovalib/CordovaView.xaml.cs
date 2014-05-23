@@ -423,7 +423,7 @@ namespace WPCordovaClassLib
 
             try
             {
-                CordovaBrowser.InvokeScript("execScript", new string[] { nativeReady });
+                CordovaBrowser.InvokeScript("eval", new string[] { nativeReady });
             }
             catch (Exception /*ex*/)
             {
@@ -435,7 +435,6 @@ namespace WPCordovaClassLib
                 FadeIn.Begin();
             }
         }
-
 
         void CordovaBrowser_Navigating(object sender, NavigatingEventArgs e)
         {
