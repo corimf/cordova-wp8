@@ -515,7 +515,11 @@ namespace WPCordovaClassLib
 
         private void CordovaBrowser_Unloaded(object sender, RoutedEventArgs e)
         {
-
+            PhoneApplicationService service = PhoneApplicationService.Current;
+            service.Activated -= new EventHandler<Microsoft.Phone.Shell.ActivatedEventArgs>(AppActivated);
+            service.Launching -= new EventHandler<LaunchingEventArgs>(AppLaunching);
+            service.Deactivated -= new EventHandler<DeactivatedEventArgs>(AppDeactivated);
+            service.Closing -= new EventHandler<ClosingEventArgs>(AppClosing);
         }
 
         private void CordovaBrowser_NavigationFailed(object sender, System.Windows.Navigation.NavigationFailedEventArgs e)
