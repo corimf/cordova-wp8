@@ -18,6 +18,7 @@ using System.Threading;
 using Microsoft.Devices;
 using Microsoft.Phone.Controls;
 using WPCordovaClassLib.Cordova.Commands;
+using System.Collections.Generic;
 using System.Windows;
 
 namespace WPCordovaClassLib.Cordova
@@ -33,6 +34,8 @@ namespace WPCordovaClassLib.Cordova
         /// </summary>
         private readonly WebBrowser webBrowser;
 
+        private List<BaseCommand> commands;
+
         /// <summary>
         /// Creates new instance of a NativeExecution class. 
         /// </summary>
@@ -45,6 +48,24 @@ namespace WPCordovaClassLib.Cordova
             }
 
             this.webBrowser = browser;
+            this.commands = new List<BaseCommand>();
+            webBrowser.Unloaded += webBrowser_Unloaded;
+        }
+
+        void webBrowser_Unloaded(object sender, RoutedEventArgs e)
+        {
+            for (int i = commands.Count - 1; i >= 0; i--)
+            {
+                try
+                {
+                    BaseCommand bc = commands[i];
+                    bc.RemoveHandlers();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("ERROR: Exception in Native Execution: Failed to remove handlers from BaseCommand: " + ex.Message);
+                }
+            }
         }
 
         /// <summary>
@@ -120,6 +141,7 @@ namespace WPCordovaClassLib.Cordova
                     try
                     {
                         bc.InvokeMethodNamed(commandCallParams.CallbackId,commandCallParams.Action, commandCallParams.Args);
+                        commands.Add(bc);
                     }
                     catch (Exception ex)
                     {
