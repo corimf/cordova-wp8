@@ -120,8 +120,6 @@ namespace WPCordovaClassLib.Cordova
                     try
                     {
                         bc.InvokeMethodNamed(commandCallParams.CallbackId,commandCallParams.Action, commandCallParams.Args);
-                        bc.RemoveResultHandler(commandCallParams.CallbackId);
-                        bc.OnCustomScript -= OnCustomScriptHandler;
                     }
                     catch (Exception ex)
                     {

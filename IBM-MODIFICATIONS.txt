@@ -1,14 +1,6 @@
 Fix memory leak when navigating from native page
 
-- Cordova RTC work item number: 44618
+- Cordova RTC work item number: 46618
 - Apache Cordova Jira issue: https://issues.apache.org/jira/browse/CB-6924
 - IBM PMR: 79005,999,000
 - Full description: There was a memory leak caused by the PhoneApplicationService in the CordovaView when navigating back and forth between a native and hybrid page.
-
-
-Fix memory leak in plugins when navigating pages
-
-- Cordova RTC work item number: 45147
-- Apache Cordova Jira issue: https://issues.apache.org/jira/browse/CB-7028
-- IBM PMR: 79005,999,000
-- Full description: There was a memory leak when the network-information or device plugins were installed in a project that navigated between a native and hybrid page, due to failure to unwire events in NativeExecution.cs.
