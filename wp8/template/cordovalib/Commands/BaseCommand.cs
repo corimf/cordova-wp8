@@ -172,6 +172,23 @@ namespace WPCordovaClassLib.Cordova.Commands
             this.OnCommandResult = null;
         }
 
+        public void RemoveHandlers()
+        {
+            this.OnCommandResult = null;
+            this.OnCustomScript = null;
+            try
+            {
+                foreach (string callbackId in new List<string>(ResultHandlers.Keys))
+                {
+                    RemoveResultHandler(callbackId);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("ERROR: BaseCommand error removing handlers: " + ex.Message);
+            }
+        }
+
         public static string GetBaseURL()
         {
 #if CORDOVA_CLASSLIB

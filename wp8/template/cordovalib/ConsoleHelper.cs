@@ -74,5 +74,14 @@ namespace WPCordovaClassLib.CordovaLib
             return true;
         }
 
+        public void DetachHandler()
+        {
+            if (hasListener)
+            {
+                PhoneApplicationService.Current.Closing -= OnServiceClosing;
+                hasListener = false;
+            }
+        }
+
     }
 }
