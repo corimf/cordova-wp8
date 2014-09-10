@@ -13,3 +13,14 @@ Fix memory leak in plugins when navigating pages
 - Apache Cordova Jira issue: https://issues.apache.org/jira/browse/CB-7028
 - IBM PMR: 79005,999,000
 - Full description: There was a memory leak when the network-information or device plugins were installed in a project that navigated between a native and hybrid page, due to failure to unwire events in NativeExecution.cs. (Changes reverted and re-added a safer fix)
+
+Fix XHRHelper doesn't resolve request using relative file path
+
+- Cordova RTC work item number: 51127
+- Apache Cordova Jira issue: https://issues.apache.org/jira/browse/CB-7338
+- Markmail or Google Group reference: n/a
+- Product PMR: 81056,841,758
+- Worklight RTC work item number: 49576
+- Associated mobile-spec test: local XHR Tests - cordova-mobile-spec repository, branch 3.1.x. All green over WP 8.1 & 8.0.
+- Cherry-pick 3dbe46184c5846653dc553ea8984d1736380f0bc, 18ec1c3af674007e48bf34dcdf3fc7ee0be8ba10, efaf559ae846567e68e4d96446c8760c3ceed8fc, 8829719bbbca1e92670f4576f7baa5e6e4701b9a (Fix related to this Jira issue - CB-7338), this cherry picks were added to resolve problems over Windows Phone 8.1.
+- Description: Windows Phone native side wasn't resolving XMLHttpRequest, the URL provided for an XHR call, at times contains some unwanted extra slashes, like: 'x-wmapp0: /www or //www'. Added regular expresion to the js script code to remove any ----> ':/, ://, :///' , any slash after 'x-wmapp0:', in that way the URI class it will be successfully resolved and provide the requested content. Also try-catch statements were added, over the 'Browser.InvokeScript' statements, to avoid: 'A first chance exception of type 'System.OutOfMemoryException' occurred in Microsoft.Phone.Interop.ni.dll', that stops the application.
