@@ -23,6 +23,9 @@ namespace WPCordovaClassLib.CordovaLib
     if (!win.__XHRShimAliases) {
         win.__XHRShimAliases = {};
     }
+    else {
+        return; // already initialized, this happens when navigating to #
+    }
 
     win.__onXHRLocalCallback = function (responseCode, responseText, reqId) {
         if (win.__XHRShimAliases[reqId]){
