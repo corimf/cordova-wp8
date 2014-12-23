@@ -1,0 +1,10 @@
+Adding fixes to XHRHelper class to successfully work with Angular JS.
+- Cordova RTC work item number: 60654
+- Apache Cordova Jira issue: https://issues.apache.org/jira/browse/CB-7843, https://issues.apache.org/jira/browse/CB-7892
+- Markmail or Google Group reference: n/a
+- Product PMR: 65567,650,758
+- APAR: PI31953 - Item 60655
+- Cherry-pick: e693d147b87641fcc2f341dbea7bc7c73d14f9e1, 6bb3fc38a4d67cf378e1b11839c4af327ebfccd5
+- Description: Main issue is that the window.__XHRShimAliases object gets recreated when window location changes, causing that callbacks for XHR calls 
+are never getting received. A condition was added to define if the object is already present, and avoid unnecessary recreation. 
+The last one was added to fix an angular use case, to avoid reload on InjectScript Method when the url is changed.
