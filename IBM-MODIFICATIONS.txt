@@ -1,0 +1,10 @@
+
+Adding fix for AngularJS use case to XHRHelper class
+
+- Cordova RTC work item number: 60654
+- Apache Cordova Jira issue: https://issues.apache.org/jira/browse/CB-7892
+- Markmail or Google Group reference: n/a
+- Product PMR: 65567,650,758
+- APAR: PI31953 - Item 60655
+- Cherry-pick: 6bb3fc3
+- Description: fix an angular use case, to avoid reload on InjectScript Method when the url is changed.
