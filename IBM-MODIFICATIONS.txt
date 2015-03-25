@@ -1,6 +1,0 @@
-Fix memory leak when navigating from native page
-
--Cordova RTC work item number: 44618
--Apache Cordova Jira issue: https://issues.apache.org/jira/browse/CB-6924
--IBM PMR: 79005,999,000
--Full description: Memory leak was found when navigating back and forth between a native and hybrid page. I fixed leaks with the PhoneApplicationService, DOMStorageHelper, and NativeExecution.ProcessCommand.

@@ -53,15 +53,6 @@ namespace WPCordovaClassLib
             Application.Current.Exit += new EventHandler(OnAppExit);
         }
 
-        public void DetachHandler()
-        {
-            try
-            {
-                Application.Current.Exit -= new EventHandler(OnAppExit);
-            }
-            catch { }
-        }
-
         void OnAppExit(object sender, EventArgs e)
         {
             UserSettings.Remove("sessionStorage");

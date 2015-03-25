@@ -114,8 +114,6 @@ namespace WPCordovaClassLib.Cordova
                     try
                     {
                         bc.InvokeMethodNamed(commandCallParams.Action, commandCallParams.Args);
-                        bc.OnCommandResult -= OnCommandResultHandler;
-                        bc.OnCustomScript -= OnCustomScriptHandler;
                     }
                     catch (Exception ex)
                     {
@@ -154,7 +152,6 @@ namespace WPCordovaClassLib.Cordova
                 return;
             }
         }
-
 
         /// <summary>
         /// Handles command execution result.
