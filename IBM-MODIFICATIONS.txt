@@ -1,0 +1,5 @@
+Fix memory leak in navigator.camera.getPicture()
+
+- Cordova RTC work item number: 64615
+- IBM PMR: 64152,024,677
+- Full description: A memory leak was observed when using camera.getPicture() multiple times. I backported a minimal change set based on https://github.com/corimf/cordova-plugin-camera/commit/e7a3d70fe969f75b795ca216dd9173f8df1635ee which fixed multiple camera issues in 3.4.

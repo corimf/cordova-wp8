@@ -113,21 +113,19 @@ namespace WPCordovaClassLib.Cordova.Commands
             [DataMember(IsRequired = false, Name = "correctOrientation")]
             public bool CorrectOrientation { get; set; }
 
-            
-
             /// <summary>
             /// Ignored
             /// </summary>
             [DataMember(IsRequired = false, Name = "allowEdit")]
             public bool AllowEdit { get; set; }
 
-                        /// <summary>
+            /// <summary>
             /// Height in pixels to scale image
             /// </summary>
             [DataMember(IsRequired = false, Name = "encodingType")]
             public int EncodingType { get; set; }
 
-                        /// <summary>
+            /// <summary>
             /// Height in pixels to scale image
             /// </summary>
             [DataMember(IsRequired = false, Name = "mediaType")]
@@ -209,7 +207,7 @@ namespace WPCordovaClassLib.Cordova.Commands
                 this.cameraOptions.AllowEdit = bool.Parse(args[7]);
                 this.cameraOptions.CorrectOrientation = bool.Parse(args[8]);
                 this.cameraOptions.SaveToPhotoAlbum = bool.Parse(args[9]);
-                
+
                 //this.cameraOptions = String.IsNullOrEmpty(options) ?
                 //        new CameraOptions() : JSON.JsonHelper.Deserialize<CameraOptions>(options);
             }
@@ -246,6 +244,12 @@ namespace WPCordovaClassLib.Cordova.Commands
 
         public void onCameraTaskCompleted(object sender, PhotoResult e)
         {
+            var task = sender as ChooserBase<PhotoResult>;
+            if (task != null)
+            {
+                task.Completed -= onCameraTaskCompleted;
+            }
+
             if (e.Error != null)
             {
                 DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR));
@@ -289,10 +293,7 @@ namespace WPCordovaClassLib.Cordova.Commands
 
                             // we should return stream position back after saving stream to media library
                             rotImageStream.Seek(0, SeekOrigin.Begin);
-
-                            WriteableBitmap image = PictureDecoder.DecodeJpeg(rotImageStream);
-
-                            imagePathOrContent = this.SaveImageToLocalStorage(image, Path.GetFileName(e.OriginalFileName));
+                            imagePathOrContent = this.SaveImageToLocalStorage(rotImageStream, Path.GetFileName(e.OriginalFileName));
 
 
                         }
@@ -329,6 +330,12 @@ namespace WPCordovaClassLib.Cordova.Commands
 
         public void onPickerTaskCompleted(object sender, PhotoResult e)
         {
+            var task = sender as ChooserBase<PhotoResult>;
+            if (task != null)
+            {
+                task.Completed -= onPickerTaskCompleted;
+            }
+
             if (e.Error != null)
             {
                 DispatchCommandResult(new PluginResult(PluginResult.Status.ERROR));
@@ -344,8 +351,7 @@ namespace WPCordovaClassLib.Cordova.Commands
 
                         if (cameraOptions.DestinationType == FILE_URI)
                         {
-                            WriteableBitmap image = PictureDecoder.DecodeJpeg(e.ChosenPhoto);
-                            imagePathOrContent = this.SaveImageToLocalStorage(image, Path.GetFileName(e.OriginalFileName));
+                            imagePathOrContent = this.SaveImageToLocalStorage(e.ChosenPhoto, Path.GetFileName(e.OriginalFileName));
                         }
                         else if (cameraOptions.DestinationType == DATA_URL)
                         {
@@ -385,24 +391,20 @@ namespace WPCordovaClassLib.Cordova.Commands
         /// <returns>Base64 representation of the image</returns>
         private string GetImageContent(Stream stream)
         {
-            int streamLength = (int)stream.Length;
-            byte[] fileData = new byte[streamLength + 1];
-            stream.Read(fileData, 0, streamLength);
+            byte[] imageContent = null;
 
-            //use photo's actual width & height if user doesn't provide width & height
-            if (cameraOptions.TargetWidth < 0 && cameraOptions.TargetHeight < 0)
-            {
-                stream.Close();
-                return Convert.ToBase64String(fileData);
-            }
-            else
+            try
             {
                 // resize photo
-                byte[] resizedFile = ResizePhoto(stream, fileData);
-                stream.Close();
-                return Convert.ToBase64String(resizedFile);
+                imageContent = ResizePhoto(stream);
             }
+            finally
+            {
+                stream.Dispose();
+            }
+            return Convert.ToBase64String(imageContent);
         }
+
 
         /// <summary>
         /// Resize image
@@ -410,33 +412,83 @@ namespace WPCordovaClassLib.Cordova.Commands
         /// <param name="stream">Image stream</param>
         /// <param name="fileData">File data</param>
         /// <returns>resized image</returns>
-        private byte[] ResizePhoto(Stream stream, byte[] fileData)
+        private byte[] ResizePhoto(Stream stream)
         {
-            int streamLength = (int)stream.Length;
-            int intResult = 0;
 
+            // output
             byte[] resizedFile;
 
-            stream.Read(fileData, 0, streamLength);
-
             BitmapImage objBitmap = new BitmapImage();
-            MemoryStream objBitmapStream = new MemoryStream(fileData);
-            MemoryStream objBitmapStreamResized = new MemoryStream();
-            WriteableBitmap objWB;
             objBitmap.SetSource(stream);
-            objWB = new WriteableBitmap(objBitmap);
+            objBitmap.CreateOptions = BitmapCreateOptions.None;
 
-            // resize the photo with user defined TargetWidth & TargetHeight
-            Extensions.SaveJpeg(objWB, objBitmapStreamResized, cameraOptions.TargetWidth, cameraOptions.TargetHeight, 0, cameraOptions.Quality);
+            WriteableBitmap objWB = new WriteableBitmap(objBitmap);
+            objBitmap.UriSource = null;
 
-            //Convert the resized stream to a byte array. 
-            streamLength = (int)objBitmapStreamResized.Length;
-            resizedFile = new Byte[streamLength]; //-1 
-            objBitmapStreamResized.Position = 0;
-            //for some reason we have to set Position to zero, but we don't have to earlier when we get the bytes from the chosen photo... 
-            intResult = objBitmapStreamResized.Read(resizedFile, 0, streamLength);
+            // Calculate correct image size
+            int width, height;
+            if (cameraOptions.TargetWidth >= 0 && cameraOptions.TargetHeight >= 0)
+            {
+                // Keep proportionality
+                double ratio = Math.Min(
+                    (double)cameraOptions.TargetWidth / objWB.PixelWidth,
+                    (double)cameraOptions.TargetHeight / objWB.PixelHeight);
+                width = Convert.ToInt32(ratio * objWB.PixelWidth);
+                height = Convert.ToInt32(ratio * objWB.PixelHeight);
+            }
+            else
+            {
+                width = objWB.PixelWidth;
+                height = objWB.PixelHeight;
+            }
+
+            // Hold the result stream
+            using (MemoryStream objBitmapStreamResized = new MemoryStream())
+            {
+                try
+                {
+                    // Resize the photo with user defined TargetWidth and TargetHeight
+                    Extensions.SaveJpeg(objWB, objBitmapStreamResized, width, height, 0, cameraOptions.Quality);
+                }
+                finally
+                {
+                    // Dispose bitmaps immediately, they are memory expensive
+                    DisposeImage(objBitmap);
+                    DisposeImage(objWB);
+                    GC.Collect();
+                }
+
+                // Conver the resized stream to a byte array
+                int streamLength = (int)objBitmapStreamResized.Length;
+                resizedFile = new Byte[streamLength];
+                objBitmapStreamResized.Position = 0;
+
+                // for some reason we have to set Position to zero, but we don't have to earlier when we get the bytes from the chosen photo... 
+                objBitmapStreamResized.Read(resizedFile, 0, streamLength);
+            }
 
             return resizedFile;
+        }
+
+        /// <summary>
+        /// Util: Dispose a bitmap resource
+        /// </summary>
+        /// <param name="image">BitmapSource sublcass to dispose</param>
+        private void DisposeImage(BitmapSource image)
+        {
+            if (image != null)
+            {
+                try
+                {
+                    using (var ms = new MemoryStream(new byte[] { 0x0 }))
+                    {
+                        image.SetSource(ms);
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
 
         /// <summary>
@@ -444,17 +496,15 @@ namespace WPCordovaClassLib.Cordova.Commands
         /// </summary>
         /// <param name="imageFileName">image file name</param>
         /// <returns>Image path</returns>
-        private string SaveImageToLocalStorage(WriteableBitmap image, string imageFileName)
+        private string SaveImageToLocalStorage(Stream stream, string imageFileName)
         {
 
-            if (image == null)
+            if (stream == null)
             {
                 throw new ArgumentNullException("imageBytes");
             }
             try
             {
-
-
                 var isoFile = IsolatedStorageFile.GetUserStoreForApplication();
 
                 if (!isoFile.DirectoryExists(isoFolder))
@@ -464,16 +514,40 @@ namespace WPCordovaClassLib.Cordova.Commands
 
                 string filePath = System.IO.Path.Combine("/" + isoFolder + "/", imageFileName);
 
-                using (var stream = isoFile.CreateFile(filePath))
+                using (IsolatedStorageFileStream outputStream = isoFile.CreateFile(filePath))
                 {
-                    // resize image if Height and Width defined via options 
-                    if (cameraOptions.TargetHeight > 0 && cameraOptions.TargetWidth > 0)
+                    BitmapImage objBitmap = new BitmapImage();
+                    objBitmap.SetSource(stream);
+                    objBitmap.CreateOptions = BitmapCreateOptions.None;
+
+                    WriteableBitmap objWB = new WriteableBitmap(objBitmap);
+                    objBitmap.UriSource = null;
+
+                    try
                     {
-                        image.SaveJpeg(stream, cameraOptions.TargetWidth, cameraOptions.TargetHeight, 0, cameraOptions.Quality);
+                        // use photo's actual width and height if user doesn't provide width and height
+                        if (cameraOptions.TargetWidth < 0 && cameraOptions.TargetHeight < 0)
+                        {
+                            objWB.SaveJpeg(outputStream, objWB.PixelWidth, objWB.PixelHeight, 0, cameraOptions.Quality);
+                        }
+                        else
+                        {
+                            // Resize
+                            // Keep proportionality
+                            double ratio = Math.Min((double)cameraOptions.TargetWidth / objWB.PixelWidth, (double)cameraOptions.TargetHeight / objWB.PixelHeight);
+                            int width = Convert.ToInt32(ratio * objWB.PixelWidth);
+                            int height = Convert.ToInt32(ratio * objWB.PixelHeight);
+
+                            // resize the photo with user defined TargetWidth and TargetHeight
+                            objWB.SaveJpeg(outputStream, width, height, 0, cameraOptions.Quality);
+                        }
                     }
-                    else
+                    finally
                     {
-                        image.SaveJpeg(stream, image.PixelWidth, image.PixelHeight, 0, cameraOptions.Quality);
+                        // dispose bitmaps immediately, they are memory expensive
+                        DisposeImage(objBitmap);
+                        DisposeImage(objWB);
+                        GC.Collect();
                     }
                 }
 
@@ -483,6 +557,10 @@ namespace WPCordovaClassLib.Cordova.Commands
             {
                 //TODO: log or do something else
                 throw;
+            }
+            finally
+            {
+                stream.Dispose();
             }
         }
 
